@@ -146,7 +146,36 @@ void SubmenuOperaciones(BankService banco)
         {
             case "1":
                 Console.Write("Cuenta origen: ");
-                //proximamente...
+                Console.Write("Cuenta origen: ");
+                int from = int.Parse(Console.ReadLine()!);
+                Console.Write("Cuenta destino: ");
+                int to = int.Parse(Console.ReadLine()!);
+                Console.Write("Monto: ");
+                decimal monto = decimal.Parse(Console.ReadLine()!);
+
+                if (banco.Transfer(from, to, monto))
+                {
+                    transacciones.Add(new Transaction
+                    {
+                        Id = nextTransactionId++,
+                        Tipo = "Transferencia",
+                        FromAccountId = from,
+                        ToAccountId = to,
+                        Monto = monto
+                    });
+
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de la transferencia
+                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de la transferencia
+                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+
+                    Console.WriteLine($"Transferencia de {monto:C} de la cuenta {from} a la cuenta {to}.");
+                    Console.WriteLine("Transferencia realizada.");
+
+                }
+                else
+                {
+                    Console.WriteLine("Error en la transferencia.");
+                }
                 break;
 
             case "2":
