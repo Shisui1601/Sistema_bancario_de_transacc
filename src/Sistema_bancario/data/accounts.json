@@ -1,0 +1,47 @@
+[
+  {
+    "Id": 1,
+    "Owner": "Edison",
+    "Balance": 2007
+  },
+  {
+    "Id": 2,
+    "Owner": "Eduardo",
+    "Balance": 994
+  },
+  {
+    "Id": 3,
+    "Owner": "Naroly",
+    "Balance": 1681
+  },
+  {
+    "Id": 4,
+    "Owner": "David",
+    "Balance": 2055
+  },
+  {
+    "Id": 5,
+    "Owner": "Jose Manuel",
+    "Balance": 4152
+  },
+  {
+    "Id": 6,
+    "Owner": "Daniel",
+    "Balance": 3426
+  },
+  {
+    "Id": 7,
+    "Owner": "Maria",
+    "Balance": 3712
+  },
+  {
+    "Id": 8,
+    "Owner": "Luis",
+    "Balance": 4100
+  },
+  {
+    "Id": 9,
+    "Owner": "Jorge",
+    "Balance": 1633
+  }
+]

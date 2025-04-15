@@ -1,0 +1,122 @@
+[
+  {
+    "Id": 1,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 3,
+    "Monto": 100,
+    "Fecha": "2025-04-14T19:07:17.5508031-04:00"
+  },
+  {
+    "Id": 2,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 1,
+    "Monto": 300,
+    "Fecha": "2025-04-14T19:07:48.8131492-04:00"
+  },
+  {
+    "Id": 3,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 3,
+    "Monto": 100,
+    "Fecha": "2025-04-14T19:09:52.6832556-04:00"
+  },
+  {
+    "Id": 4,
+    "Tipo": "Transferencia",
+    "FromAccountId": 2,
+    "ToAccountId": 1,
+    "Monto": 100,
+    "Fecha": "2025-04-14T19:12:18.467448-04:00"
+  },
+  {
+    "Id": 5,
+    "Tipo": "Transferencia",
+    "FromAccountId": 5,
+    "ToAccountId": 4,
+    "Monto": 200,
+    "Fecha": "2025-04-14T19:16:59.9366146-04:00"
+  },
+  {
+    "Id": 6,
+    "Tipo": "Transferencia",
+    "FromAccountId": 2,
+    "ToAccountId": 5,
+    "Monto": 300,
+    "Fecha": "2025-04-14T19:23:30.9725634-04:00"
+  },
+  {
+    "Id": 7,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 2,
+    "Monto": 50,
+    "Fecha": "2025-04-14T19:26:06.6234294-04:00"
+  },
+  {
+    "Id": 8,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 2,
+    "Monto": 250,
+    "Fecha": "2025-04-14T19:45:57.0514786-04:00"
+  },
+  {
+    "Id": 9,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 2,
+    "Monto": 100,
+    "Fecha": "2025-04-14T19:46:21.7628783-04:00"
+  },
+  {
+    "Id": 10,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 2,
+    "Monto": 10,
+    "Fecha": "2025-04-14T19:46:55.76497-04:00"
+  },
+  {
+    "Id": 11,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 2,
+    "Monto": 200,
+    "Fecha": "2025-04-14T20:58:08.9239005-04:00"
+  },
+  {
+    "Id": 12,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 6,
+    "Monto": 500,
+    "Fecha": "2025-04-14T20:59:44.3931084-04:00"
+  },
+  {
+    "Id": 13,
+    "Tipo": "Transferencia",
+    "FromAccountId": 2,
+    "ToAccountId": 1,
+    "Monto": 1000,
+    "Fecha": "2025-04-14T21:06:30.55243-04:00"
+  },
+  {
+    "Id": 14,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 1,
+    "Monto": 500,
+    "Fecha": "2025-04-14T21:08:13.2427743-04:00"
+  },
+  {
+    "Id": 15,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 1,
+    "Monto": 500,
+    "Fecha": "2025-04-14T21:16:13.3217838-04:00"
+  }
+]
