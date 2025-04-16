@@ -56,52 +56,9 @@ while (true)
 
         case "2":
             SubmenuOperaciones(bank);
-            int nuevoId;
-               while (true)
-               {
-                   Console.Write("ID de cuenta (dejar vacío para generar automaticamente): ");
-                   string inputId = Console.ReadLine()!;
-                   if (string.IsNullOrWhiteSpace(inputId))
-                   {
-                       var cuentasExistentes = banco.GetAllAccounts().ToList();
-                       nuevoId = cuentasExistentes.Any() ? cuentasExistentes.Max(c => c.Id) + 1 : 1;
-                       break;
-                   }
-                   else if (int.TryParse(inputId, out int manualId))
-                   {
-                       bool existe = banco.GetAllAccounts().Any(c => c.Id == manualId);
-                       if (existe)
-                       {
-                           Console.WriteLine("Ya existe una cuenta con ese ID. Introduzca otro.");
-                       }
-                       else
-                       {
-                           nuevoId = manualId;
-                           break;
-                       }
-                   }
-                   else
-                   {
-                       Console.WriteLine("ID inválido. Debe ser un número entero.");
-                   }
-               }
-               Console.Write("Nombre del dueño: ");
-               string owner = Console.ReadLine()!;
-               Console.Write("Saldo inicial: ");
-               decimal saldo = decimal.Parse(Console.ReadLine()!);
-               banco.AddAccount(new Account(nuevoId, owner, saldo));
-               JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de agregar una nueva
-               JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de agregar una nueva cuenta
-               var nuevaCuenta = new Account(nuevoId, owner, saldo);
-               var nuevasCuentas = new List<Account>();
-               // Verificar si la cuenta ya existe en la lista
-               nuevasCuentas.Add(nuevaCuenta);
-               Console.WriteLine($"Cuenta registrada con ID: {nuevoId}");
-               Console.WriteLine("\n--- Resumen de cuentas nuevas ---");
-               foreach (var cuentaNueva in nuevasCuentas)
-                   Console.WriteLine($"[{cuentaNueva.Id}] {cuentaNueva.Owner} - ${cuentaNueva.Balance}");
-               break;
-               
+
+            break;
+
         case "3":
             FileManager.SaveAccounts(bank.GetAllAccounts());
             JsonStorage.SaveTransactions(transacciones);
@@ -150,15 +107,61 @@ void SubmenuCuentas(BankService banco)
         switch (option)
         {
             case "1":
-                //proximamente...
+                foreach (var acc in banco.GetAllAccounts())
+
+                    Console.WriteLine($"[{acc.Id}] {acc.Owner} - ${acc.Balance}");
+
                 break;
 
             case "2":
-                //proximamente...
+                int nuevoId;
+                while (true)
+                {
+                    Console.Write("ID de cuenta (dejar vacío para generar automaticamente): ");
+                    string inputId = Console.ReadLine()!;
+                    if (string.IsNullOrWhiteSpace(inputId))
+                    {
+                        var cuentasExistentes = banco.GetAllAccounts().ToList();
+                        nuevoId = cuentasExistentes.Any() ? cuentasExistentes.Max(c => c.Id) + 1 : 1;
+                        break;
+                    }
+                    else if (int.TryParse(inputId, out int manualId))
+                    {
+                        bool existe = banco.GetAllAccounts().Any(c => c.Id == manualId);
+                        if (existe)
+                        {
+                            Console.WriteLine("Ya existe una cuenta con ese ID. Introduzca otro.");
+                        }
+                        else
+                        {
+                            nuevoId = manualId;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("ID inválido. Debe ser un número entero.");
+                    }
+                }
+                Console.Write("Nombre del dueño: ");
+                string owner = Console.ReadLine()!;
+                Console.Write("Saldo inicial: ");
+                decimal saldo = decimal.Parse(Console.ReadLine()!);
+                banco.AddAccount(new Account(nuevoId, owner, saldo));
+                JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de agregar una nueva
+                JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de agregar una nueva cuenta
+                var nuevaCuenta = new Account(nuevoId, owner, saldo);
+                var nuevasCuentas = new List<Account>();
+                // Verificar si la cuenta ya existe en la lista
+                nuevasCuentas.Add(nuevaCuenta);
+                Console.WriteLine($"Cuenta registrada con ID: {nuevoId}");
+                Console.WriteLine("\n--- Resumen de cuentas nuevas ---");
+                foreach (var cuentaNueva in nuevasCuentas)
+                    Console.WriteLine($"[{cuentaNueva.Id}] {cuentaNueva.Owner} - ${cuentaNueva.Balance}");
                 break;
 
             case "3":
-               //proximamente...
+                //proximamente...
                 break;
 
             case "4":
@@ -205,7 +208,7 @@ void SubmenuOperaciones(BankService banco)
 
             case "4":
                 Console.Write("ID de transacción: ");
-               //proximamente...
+                //proximamente...
                 break;
 
             case "5":
