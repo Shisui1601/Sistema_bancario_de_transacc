@@ -161,8 +161,16 @@ void SubmenuCuentas(BankService banco)
                 break;
 
             case "3":
-                //proximamente...
+                Console.Write("Ingresa el ID de la cuenta: ");
+                int buscarId = int.Parse(Console.ReadLine()!);
+                var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == buscarId);
+                if (cuenta != null)
+                    Console.WriteLine($"[{cuenta.Id}] {cuenta.Owner} - ${cuenta.Balance}");
+                else
+                    Console.WriteLine("Cuenta no encontrada.");
                 break;
+
+                
 
             case "4":
                 return;
