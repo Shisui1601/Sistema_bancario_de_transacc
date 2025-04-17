@@ -51,7 +51,6 @@ while (true)
     {
         case "1":
             SubmenuCuentas(bank);
-            //proximamente
             break;
 
         case "2":
@@ -207,11 +206,46 @@ void SubmenuOperaciones(BankService banco)
 
             case "2":
                 Console.Write("Cuenta a depositar: ");
-                //proximamente...
+                int cuentaId = int.Parse(Console.ReadLine()!);
+                Console.Write("Monto a depositar: ");
+                decimal deposito = decimal.Parse(Console.ReadLine()!);
+
+                var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == cuentaId);
+                if (cuenta != null)
+                {
+                    cuenta.Balance += deposito;
+                    transacciones.Add(new Transaction
+                    {
+                        Id = nextTransactionId++,
+                        Tipo = "Depósito",
+                        FromAccountId = null,
+                        ToAccountId = cuentaId,
+                        Monto = deposito
+                    });
+
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después del depósito
+                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después del depósito
+                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+
+                    Console.WriteLine($"Depósito de {deposito:C} realizado en la cuenta {cuentaId}.");
+                    Console.WriteLine("Depósito realizado.");
+                }
+                else
+                {
+                    Console.WriteLine("Cuenta no encontrada.");
+                }
                 break;
 
             case "3":
-                //proximamente...
+                  if (transacciones.Count == 0)
+                {
+                    Console.WriteLine("📭 No hay transacciones registradas.");
+                }
+                else
+                {
+                    foreach (var t in transacciones)
+                        Console.WriteLine(t);
+                }
                 break;
 
             case "4":
