@@ -97,7 +97,8 @@ void SubmenuCuentas(BankService banco)
         1. Ver todas las cuentas
         2. Registrar nueva cuenta
         3. Consultar cuenta por ID
-        4. Volver al menú principal
+        4. Eliminar cuenta
+        5. Volver al menú principal
         ");
         Console.Write("Selecciona una opción: ");
         var option = Console.ReadLine();
@@ -113,10 +114,41 @@ void SubmenuCuentas(BankService banco)
                 break;
 
             case "3":
-               //proximamente...
+                
+                Console.Write("Ingresa el ID de la cuenta: ");
+                int buscarId = int.Parse(Console.ReadLine()!);
+                var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == buscarId);
+                if (cuenta != null)
+                    Console.WriteLine($"[{cuenta.Id}] {cuenta.Owner} - ${cuenta.Balance}");
+                else
+                    Console.WriteLine("Cuenta no encontrada.");
+
+                break;
+            
+            case "4":
+                Console.Write("Ingresa el ID de la cuenta a eliminar: ");
+                int eliminarId = int.Parse(Console.ReadLine()!);
+                var cuentaEliminar = banco.GetAllAccounts().FirstOrDefault(c => c.Id == eliminarId);
+                if (cuentaEliminar != null)
+                {
+                    if (banco.RemoveAccount(eliminarId))
+                    {
+                        JsonStorage.SaveAccounts(banco.GetAllAccounts());
+                        FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
+                        Console.WriteLine($"Cuenta con ID {eliminarId} eliminada.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("No se pudo eliminar la cuenta.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Cuenta no encontrada.");
+                }
                 break;
 
-            case "4":
+            case "5":
                 return;
 
             default:
