@@ -9,7 +9,7 @@ namespace BankSim.Utils
     {
         private const string FilePath = "accountsSimulacion.json";
 
-        public static void SaveAccounts(IEnumerable<Account> accounts)
+        public static void SaveAccountsSimulacion(IEnumerable<Account> accounts)
         {
             var json = JsonSerializer.Serialize(accounts, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(FilePath, json);

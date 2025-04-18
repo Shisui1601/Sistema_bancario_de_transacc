@@ -19,7 +19,7 @@ namespace BankSim.Services
             if (!_accounts.ContainsKey(fromId) || !_accounts.ContainsKey(toId) || amount <= 0)
                 return false;
 
-            lock (_lock) 
+            lock (_lock)
             {
                 var fromAccount = _accounts[fromId];
                 var toAccount = _accounts[toId];
@@ -40,5 +40,10 @@ namespace BankSim.Services
         }
 
         public IEnumerable<Account> GetAllAccounts() => _accounts.Values;
+
+        public bool RemoveAccount(int id)
+        {
+            return _accounts.TryRemove(id, out _);
+        }
     }
 }

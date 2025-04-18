@@ -11,23 +11,29 @@ using System.Linq;
 using System;
 
 
-var cuentasSimuladas = FileManager.LoadAccounts(); // Cargar cuentas desde el archivo para la simulación
-if (cuentasSimuladas.Count == 0) // Si no hay cuentas, crear una cuenta por defecto
+var cuentasSimuladas = FileManager.LoadAccounts(); // Cargar cuentas desde el archivo de simulación
+if (cuentasSimuladas.Count < 100) // Verificar si hay menos de 100 cuentas
 {
-    cuentasSimuladas.Add(new Account(1, "Cuenta de Prueba", 1000));
-    FileManager.SaveAccounts(cuentasSimuladas); // Guardar la cuenta por defecto en el archivo
+    Console.WriteLine("Generando cuentas simuladas...");
+    int nextId = cuentasSimuladas.Any() ? cuentasSimuladas.Max(c => c.Id) + 1 : 1; // Obtener el próximo ID disponible
+    for (int i = cuentasSimuladas.Count; i < 100; i++)
+    {
+        cuentasSimuladas.Add(new Account(nextId++, $"Cuenta Simulada {i + 1}", new Random().Next(1000, 10000))); // Generar cuentas con saldo aleatorio
+    }
+    FileManager.SaveAccountsSimulacion(cuentasSimuladas); // Guardar las cuentas simuladas
+    Console.WriteLine("Cuentas simuladas generadas.");
 }
-var accountsDict = new ConcurrentDictionary<int, Account>(cuentasSimuladas.ToDictionary(a => a.Id)); // Crear un diccionario concurrente a partir de la lista de cuentas
+var cuentasDictSimuladas = new ConcurrentDictionary<int, Account>(cuentasSimuladas.ToDictionary(a => a.Id)); // Crear un diccionario concurrente a partir de la lista de cuentas simuladas
+var bankSimulacion = new BankService(cuentasDictSimuladas); // Crear instancia de BankService con el diccionario de cuentas simuladas
 
 
 
-var cuentasList = FileManager.LoadAccounts(); // Cargar cuentas desde el archivo
+var cuentasList = JsonStorage.LoadAccounts(); // Cargar cuentas desde el archivo
 var cuentasDict = new ConcurrentDictionary<int, Account>(cuentasList.ToDictionary(a => a.Id)); // Crear un diccionario concurrente a partir de la lista de cuentas
 var bank = new BankService(cuentasDict);   // Crear instancia de BankService con el diccionario de cuentas
 
 var transacciones = JsonStorage.LoadTransactions(); // Cargar transacciones desde el archivo
 var nextTransactionId = transacciones.Any() ? transacciones.Max(t => t.Id) + 1 : 1; // ID para la siguiente transacción
-
 
 
 
@@ -58,7 +64,9 @@ while (true)
             break;
 
         case "3":
-            FileManager.SaveAccounts(bank.GetAllAccounts());
+            FileManager.SaveAccountsSimulacion(bankSimulacion.GetAllAccounts());
+            JsonStorage.SaveAccounts(bank.GetAllAccounts());
+            JsonStorage.SaveTransactionSummary(transacciones);
             JsonStorage.SaveTransactions(transacciones);
             Console.WriteLine("Cuentas guardadas.");
             break;
@@ -76,7 +84,9 @@ while (true)
 
         case "6":
             Console.WriteLine("Saliendo...");
-            FileManager.SaveAccounts(bank.GetAllAccounts());
+            FileManager.SaveAccountsSimulacion(bankSimulacion.GetAllAccounts());
+            JsonStorage.SaveAccounts(bank.GetAllAccounts());
+            JsonStorage.SaveTransactionSummary(transacciones);
             JsonStorage.SaveTransactions(transacciones);
             Console.WriteLine("Cuentas guardadas.");
             return;
