@@ -184,12 +184,25 @@ void SubmenuOperaciones(BankService banco)
                 break;
 
             case "3":
-                //proximamente...
+                if (transacciones.Count == 0)
+                {
+                    Console.WriteLine("📭 No hay transacciones registradas.");
+                }
+                else
+                {
+                    foreach (var t in transacciones)
+                        Console.WriteLine(t);
+                }
                 break;
 
             case "4":
                 Console.Write("ID de transacción: ");
-               //proximamente...
+                int tId = int.Parse(Console.ReadLine()!);
+                var trans = transacciones.FirstOrDefault(t => t.Id == tId);
+                if (trans != null)
+                    Console.WriteLine(trans);
+                else
+                    Console.WriteLine("Transacción no encontrada.");
                 break;
 
             case "5":
