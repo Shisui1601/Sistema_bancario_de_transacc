@@ -184,15 +184,7 @@ void SubmenuOperaciones(BankService banco)
                 break;
 
             case "3":
-                if (transacciones.Count == 0)
-                {
-                    Console.WriteLine("📭 No hay transacciones registradas.");
-                }
-                else
-                {
-                    foreach (var t in transacciones)
-                        Console.WriteLine(t);
-                }
+                //proximamente...
                 break;
 
             case "4":
