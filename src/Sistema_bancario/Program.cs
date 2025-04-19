@@ -36,7 +36,68 @@ var transacciones = JsonStorage.LoadTransactions(); // Cargar transacciones desd
 var nextTransactionId = transacciones.Any() ? transacciones.Max(t => t.Id) + 1 : 1; // ID para la siguiente transacción
 
 
+async Task EjecutarConParallel(BankService banco, int numTransacciones, int[] procesadores, TransactionSummary resumen)
+{
+    double tiempoSecuencial = 0;
 
+    foreach (var numProcesadores in procesadores)
+    {
+        Console.WriteLine($"\n[Parallel.ForEachAsync] Ejecutando {numTransacciones} transacciones con {numProcesadores} procesador(es)...");
+
+        var cuentas = banco.GetAllAccounts().ToList();
+        var rnd = new Random();
+        var errores = 0;
+
+        var stopwatch = Stopwatch.StartNew();
+
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, numTransacciones),
+            new ParallelOptions { MaxDegreeOfParallelism = numProcesadores },
+            async (i, _) =>
+            {
+                int fromIndex, toIndex;
+                lock (rnd)
+                {
+                    do
+                    {
+                        fromIndex = rnd.Next(cuentas.Count);
+                        toIndex = rnd.Next(cuentas.Count);
+                    } while (fromIndex == toIndex);
+                }
+
+                int fromId = cuentas[fromIndex].Id;
+                int toId = cuentas[toIndex].Id;
+                decimal amount = rnd.Next(1, 100);
+
+                await Task.Delay(50); // simulación no bloqueante
+
+                var ok = banco.Transfer(fromId, toId, amount);
+                if (!ok) Interlocked.Increment(ref errores);
+            });
+
+        stopwatch.Stop();
+
+        var tiempoDuracion = stopwatch.Elapsed.TotalMilliseconds;
+
+        if (numProcesadores == 1)
+            tiempoSecuencial = tiempoDuracion;
+
+        double speedup = tiempoSecuencial > 0 ? tiempoSecuencial / tiempoDuracion : 1;
+        double eficiencia = speedup / numProcesadores;
+
+        resumen.Simulaciones.Add(new SimulacionMetricas
+        {
+            Procesadores = numProcesadores,
+            TiempoDuracionMs = tiempoDuracion,
+            Speedup = speedup,
+            Eficiencia = eficiencia
+        });
+
+        Console.WriteLine($"Completado en {tiempoDuracion:F2}ms.");
+        Console.WriteLine($"Speedup: {speedup:F2}");
+        Console.WriteLine($"Eficiencia: {eficiencia:P2}");
+    }
+}
 
 while (true)
 {
