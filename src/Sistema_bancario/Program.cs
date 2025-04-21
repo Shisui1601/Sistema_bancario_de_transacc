@@ -324,8 +324,26 @@ void SubmenuOperaciones(BankService banco)
                 break;
 
             case "4":
-                Console.Write("ID de transacción: ");
-                //proximamente...
+              Console.Write("Ingresa el ID de la cuenta a eliminar: ");
+                int eliminarId = int.Parse(Console.ReadLine()!);
+                var cuentaEliminar = banco.GetAllAccounts().FirstOrDefault(c => c.Id == eliminarId);
+                if (cuentaEliminar != null)
+                {
+                    if (banco.RemoveAccount(eliminarId))
+                    {
+                        JsonStorage.SaveAccounts(banco.GetAllAccounts());
+                        FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
+                        Console.WriteLine($"Cuenta con ID {eliminarId} eliminada.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("No se pudo eliminar la cuenta.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Cuenta no encontrada.");
+                }
                 break;
 
             case "5":
