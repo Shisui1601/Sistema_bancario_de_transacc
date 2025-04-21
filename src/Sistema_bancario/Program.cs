@@ -71,8 +71,83 @@ while (true)
             break;
 
         case "5":
-            Console.Write("Número de transacciones: ");
-            //proximamente...
+           async Task EjecutarConTasks(BankService banco, int numTransacciones, int[] procesadores, TransactionSummary resumen)
+{
+    double tiempoSecuencial = 0;
+
+    foreach (var numProcesadores in procesadores)
+    {
+        Console.WriteLine($"\n[Task.Run Async] Ejecutando {numTransacciones} transacciones con {numProcesadores} procesador(es)...");
+
+        var cuentas = banco.GetAllAccounts().ToList();
+        var errores = 0;
+        var rnd = new Random();
+
+        using var semaphore = new SemaphoreSlim(numProcesadores);
+        var tasks = new List<Task>();
+        var stopwatch = Stopwatch.StartNew();
+
+        for (int i = 0; i < numTransacciones; i++)
+        {
+            await semaphore.WaitAsync();
+
+            var task = Task.Run(async () =>
+            {
+                try
+                {
+                    int fromIndex, toIndex;
+                    lock (rnd)
+                    {
+                        do
+                        {
+                            fromIndex = rnd.Next(cuentas.Count);
+                            toIndex = rnd.Next(cuentas.Count);
+                        } while (fromIndex == toIndex);
+                    }
+
+                    int fromId = cuentas[fromIndex].Id;
+                    int toId = cuentas[toIndex].Id;
+                    decimal amount = rnd.Next(1, 100);
+
+                    await Task.Delay(50); // simulación no bloqueante
+
+                    var ok = banco.Transfer(fromId, toId, amount);
+                    if (!ok) Interlocked.Increment(ref errores);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            tasks.Add(task);
+        }
+
+        await Task.WhenAll(tasks);
+
+        stopwatch.Stop();
+
+        var tiempoDuracion = stopwatch.Elapsed.TotalMilliseconds;
+
+        if (numProcesadores == 1)
+            tiempoSecuencial = tiempoDuracion;
+
+        double speedup = tiempoSecuencial > 0 ? tiempoSecuencial / tiempoDuracion : 1;
+        double eficiencia = speedup / numProcesadores;
+
+        resumen.Simulaciones.Add(new SimulacionMetricas
+        {
+            Procesadores = numProcesadores,
+            TiempoDuracionMs = tiempoDuracion,
+            Speedup = speedup,
+            Eficiencia = eficiencia
+        });
+
+        Console.WriteLine($"Completado en {tiempoDuracion:F2}ms.");
+        Console.WriteLine($"Speedup: {speedup:F2}");
+        Console.WriteLine($"Eficiencia: {eficiencia:P2}");
+    }
+}
             break;
 
         case "6":
