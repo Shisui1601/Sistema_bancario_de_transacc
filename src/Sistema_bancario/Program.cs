@@ -8,7 +8,10 @@ using System.Threading;
 using BankApp.Models;
 using BankApp.Services;
 using System.Linq;
-using System;
+using System.Diagnostics;
+using BankSystem.Test;
+
+BankServiceTest.Main();
 
 
 var cuentasSimuladas = FileManager.LoadAccounts(); // Cargar cuentas desde el archivo de simulación
@@ -34,6 +37,152 @@ var bank = new BankService(cuentasDict);   // Crear instancia de BankService con
 
 var transacciones = JsonStorage.LoadTransactions(); // Cargar transacciones desde el archivo
 var nextTransactionId = transacciones.Any() ? transacciones.Max(t => t.Id) + 1 : 1; // ID para la siguiente transacción
+
+
+
+async Task EjecutarConParallel(BankService banco, int numTransacciones, int[] procesadores, TransactionSummary resumen)
+{
+    double tiempoSecuencial = 0;
+
+    foreach (var numProcesadores in procesadores)
+    {
+        Console.WriteLine($"\n[Parallel.ForEachAsync] Ejecutando {numTransacciones} transacciones con {numProcesadores} procesador(es)...");
+
+        var cuentas = banco.GetAllAccounts().ToList();
+        var rnd = new Random();
+        var errores = 0;
+
+        var stopwatch = Stopwatch.StartNew();
+
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, numTransacciones),
+            new ParallelOptions { MaxDegreeOfParallelism = numProcesadores },
+            async (i, _) =>
+            {
+                int fromIndex, toIndex;
+                lock (rnd)
+                {
+                    do
+                    {
+                        fromIndex = rnd.Next(cuentas.Count);
+                        toIndex = rnd.Next(cuentas.Count);
+                    } while (fromIndex == toIndex);
+                }
+
+                int fromId = cuentas[fromIndex].Id;
+                int toId = cuentas[toIndex].Id;
+                decimal amount = rnd.Next(1, 100);
+
+                await Task.Delay(50); // simulación no bloqueante
+
+                var ok = banco.Transfer(fromId, toId, amount);
+                if (!ok) Interlocked.Increment(ref errores);
+            });
+
+        stopwatch.Stop();
+
+        var tiempoDuracion = stopwatch.Elapsed.TotalMilliseconds;
+
+        if (numProcesadores == 1)
+            tiempoSecuencial = tiempoDuracion;
+
+        double speedup = tiempoSecuencial > 0 ? tiempoSecuencial / tiempoDuracion : 1;
+        double eficiencia = speedup / numProcesadores;
+
+        resumen.Simulaciones.Add(new SimulacionMetricas
+        {
+            Procesadores = numProcesadores,
+            TiempoDuracionMs = tiempoDuracion,
+            Speedup = speedup,
+            Eficiencia = eficiencia
+        });
+
+        Console.WriteLine($"Completado en {tiempoDuracion:F2}ms.");
+        Console.WriteLine($"Speedup: {speedup:F2}");
+        Console.WriteLine($"Eficiencia: {eficiencia:P2}");
+    }
+}
+
+
+
+async Task EjecutarConTasks(BankService banco, int numTransacciones, int[] procesadores, TransactionSummary resumen)
+{
+    double tiempoSecuencial = 0;
+
+    foreach (var numProcesadores in procesadores)
+    {
+        Console.WriteLine($"\n[Task.Run Async] Ejecutando {numTransacciones} transacciones con {numProcesadores} procesador(es)...");
+
+        var cuentas = banco.GetAllAccounts().ToList();
+        var errores = 0;
+        var rnd = new Random();
+
+        using var semaphore = new SemaphoreSlim(numProcesadores);
+        var tasks = new List<Task>();
+        var stopwatch = Stopwatch.StartNew();
+
+        for (int i = 0; i < numTransacciones; i++)
+        {
+            await semaphore.WaitAsync();
+
+            var task = Task.Run(async () =>
+            {
+                try
+                {
+                    int fromIndex, toIndex;
+                    lock (rnd)
+                    {
+                        do
+                        {
+                            fromIndex = rnd.Next(cuentas.Count);
+                            toIndex = rnd.Next(cuentas.Count);
+                        } while (fromIndex == toIndex);
+                    }
+
+                    int fromId = cuentas[fromIndex].Id;
+                    int toId = cuentas[toIndex].Id;
+                    decimal amount = rnd.Next(1, 100);
+
+                    await Task.Delay(50); // simulación no bloqueante
+
+                    var ok = banco.Transfer(fromId, toId, amount);
+                    if (!ok) Interlocked.Increment(ref errores);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            tasks.Add(task);
+        }
+
+        await Task.WhenAll(tasks);
+
+        stopwatch.Stop();
+
+        var tiempoDuracion = stopwatch.Elapsed.TotalMilliseconds;
+
+        if (numProcesadores == 1)
+            tiempoSecuencial = tiempoDuracion;
+
+        double speedup = tiempoSecuencial > 0 ? tiempoSecuencial / tiempoDuracion : 1;
+        double eficiencia = speedup / numProcesadores;
+
+        resumen.Simulaciones.Add(new SimulacionMetricas
+        {
+            Procesadores = numProcesadores,
+            TiempoDuracionMs = tiempoDuracion,
+            Speedup = speedup,
+            Eficiencia = eficiencia
+        });
+
+        Console.WriteLine($"Completado en {tiempoDuracion:F2}ms.");
+        Console.WriteLine($"Speedup: {speedup:F2}");
+        Console.WriteLine($"Eficiencia: {eficiencia:P2}");
+    }
+}
+
 
 
 
@@ -73,12 +222,22 @@ while (true)
 
         case "4":
             Console.Write("Número de transacciones: ");
-            //proximamente...
+            int n1 = int.Parse(Console.ReadLine()!);
+            var procesadores1 = new[] { 1, 2, 4, 6, 8, 10 };
+            var resumen = new TransactionSummary();
+            await EjecutarConParallel(bankSimulacion, n1, procesadores1, resumen);
+            // JsonStorage.SaveTransactionSummary(resumen);
+            Console.WriteLine("Resumen guardado.");
             break;
 
         case "5":
             Console.Write("Número de transacciones: ");
-            //proximamente...
+            int n2 = int.Parse(Console.ReadLine()!);
+            var procesadores2 = new[] { 1, 2, 4, 6, 8, 10 };
+            var resu = new TransactionSummary();
+            await EjecutarConTasks(bankSimulacion, n2, procesadores2, resu);
+            //JsonStorage.SaveTransactionSummary(resu);
+            Console.WriteLine("Resumen guardado.");
             break;
 
         case "6":
@@ -102,28 +261,79 @@ void SubmenuCuentas(BankService banco)
     while (true)
     {
         Console.WriteLine(@"
-        ----- SUBMENÚ CUENTAS -----
-        1. Ver todas las cuentas
-        2. Registrar nueva cuenta
-        3. Consultar cuenta por ID
-        4. Eliminar cuenta
-        5. Volver al menú principal
-        ");
-        Console.Write("Selecciona una opción: ");
-        var option = Console.ReadLine();
+----- SUBMENÚ DE CUENTAS -----
+1. Ver todas las cuentas
+2. Registrar nueva cuenta
+3. Consultar cuenta por ID
+4. Eliminar cuenta
+5. Volver al menú principal
+");
 
-        switch (option)
+        Console.Write("Selecciona una opción: ");
+        var opcion = Console.ReadLine();
+
+        switch (opcion)
         {
             case "1":
-                //proximamente...
+                foreach (var acc in banco.GetAllAccounts())
+                    Console.WriteLine($"[{acc.Id}] {acc.Owner} - ${acc.Balance}");
                 break;
 
             case "2":
-                //proximamente...
+                int nuevoId;
+                while (true)
+                {
+                    Console.Write("ID de cuenta (dejar vacío para generar automaticamente): ");
+                    string inputId = Console.ReadLine()!;
+                    if (string.IsNullOrWhiteSpace(inputId))
+                    {
+
+                        var cuentasExistentes = banco.GetAllAccounts().ToList();
+                        nuevoId = cuentasExistentes.Any() ? cuentasExistentes.Max(c => c.Id) + 1 : 1;
+                        break;
+                    }
+                    else if (int.TryParse(inputId, out int manualId))
+                    {
+                        bool existe = banco.GetAllAccounts().Any(c => c.Id == manualId);
+                        if (existe)
+                        {
+                            Console.WriteLine("Ya existe una cuenta con ese ID. Introduzca otro.");
+                        }
+                        else
+                        {
+                            nuevoId = manualId;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("ID inválido. Debe ser un número entero.");
+                    }
+                }
+
+                Console.Write("Nombre del dueño: ");
+                string owner = Console.ReadLine()!;
+                Console.Write("Saldo inicial: ");
+                decimal saldo = decimal.Parse(Console.ReadLine()!);
+
+                banco.AddAccount(new Account(nuevoId, owner, saldo));
+                JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de agregar una nueva
+                FileManager.SaveAccountsSimulacion(banco.GetAllAccounts()); // Guardar cuentas simuladas
+                JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de agregar una nueva cuenta
+                var nuevaCuenta = new Account(nuevoId, owner, saldo);
+                var nuevasCuentas = new List<Account>();
+                // Verificar si la cuenta ya existe en la lista
+                nuevasCuentas.Add(nuevaCuenta);
+
+                Console.WriteLine($"Cuenta registrada con ID: {nuevoId}");
+
+                Console.WriteLine("\n--- Resumen de cuentas nuevas ---");
+                foreach (var cuentaNueva in nuevasCuentas)
+                    Console.WriteLine($"[{cuentaNueva.Id}] {cuentaNueva.Owner} - ${cuentaNueva.Balance}");
                 break;
 
+
             case "3":
-                
                 Console.Write("Ingresa el ID de la cuenta: ");
                 int buscarId = int.Parse(Console.ReadLine()!);
                 var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == buscarId);
@@ -131,9 +341,8 @@ void SubmenuCuentas(BankService banco)
                     Console.WriteLine($"[{cuenta.Id}] {cuenta.Owner} - ${cuenta.Balance}");
                 else
                     Console.WriteLine("Cuenta no encontrada.");
-
                 break;
-            
+
             case "4":
                 Console.Write("Ingresa el ID de la cuenta a eliminar: ");
                 int eliminarId = int.Parse(Console.ReadLine()!);
@@ -161,7 +370,7 @@ void SubmenuCuentas(BankService banco)
                 return;
 
             default:
-                Console.WriteLine("Opción inválida");
+                Console.WriteLine("Opción inválida.");
                 break;
         }
     }
@@ -187,21 +396,91 @@ void SubmenuOperaciones(BankService banco)
         {
             case "1":
                 Console.Write("Cuenta origen: ");
-                //proximamente...
+                int from = int.Parse(Console.ReadLine()!);
+                Console.Write("Cuenta destino: ");
+                int to = int.Parse(Console.ReadLine()!);
+                Console.Write("Monto: ");
+                decimal monto = decimal.Parse(Console.ReadLine()!);
+
+                if (banco.Transfer(from, to, monto))
+                {
+                    transacciones.Add(new Transaction
+                    {
+                        Id = nextTransactionId++,
+                        Tipo = "Transferencia",
+                        FromAccountId = from,
+                        ToAccountId = to,
+                        Monto = monto
+                    });
+
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de la transferencia
+                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts()); // Guardar cuentas simuladas después de la transferencia
+                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de la transferencia
+                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+
+                    Console.WriteLine($"Transferencia de {monto:C} de la cuenta {from} a la cuenta {to}.");
+                    Console.WriteLine("Transferencia realizada.");
+
+                }
+                else
+                {
+                    Console.WriteLine("Error en la transferencia.");
+                }
                 break;
 
             case "2":
                 Console.Write("Cuenta a depositar: ");
-                //proximamente...
+                int cuentaId = int.Parse(Console.ReadLine()!);
+                Console.Write("Monto a depositar: ");
+                decimal deposito = decimal.Parse(Console.ReadLine()!);
+
+                var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == cuentaId);
+                if (cuenta != null)
+                {
+                    cuenta.Balance += deposito;
+                    transacciones.Add(new Transaction
+                    {
+                        Id = nextTransactionId++,
+                        Tipo = "Depósito",
+                        FromAccountId = null,
+                        ToAccountId = cuentaId,
+                        Monto = deposito
+                    });
+
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después del depósito
+                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts()); // Guardar cuentas simuladas después del depósito
+                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después del depósito
+                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+
+                    Console.WriteLine($"Depósito de {deposito:C} realizado en la cuenta {cuentaId}.");
+                    Console.WriteLine("Depósito realizado.");
+                }
+                else
+                {
+                    Console.WriteLine("Cuenta no encontrada.");
+                }
                 break;
 
             case "3":
-                //proximamente...
+                if (transacciones.Count == 0)
+                {
+                    Console.WriteLine("No hay transacciones registradas.");
+                }
+                else
+                {
+                    foreach (var t in transacciones)
+                        Console.WriteLine(t);
+                }
                 break;
 
             case "4":
                 Console.Write("ID de transacción: ");
-               //proximamente...
+                int tId = int.Parse(Console.ReadLine()!);
+                var trans = transacciones.FirstOrDefault(t => t.Id == tId);
+                if (trans != null)
+                    Console.WriteLine(trans);
+                else
+                    Console.WriteLine("Transacción no encontrada.");
                 break;
 
             case "5":

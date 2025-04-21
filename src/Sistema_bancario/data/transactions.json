@@ -118,5 +118,21 @@
     "ToAccountId": 1,
     "Monto": 500,
     "Fecha": "2025-04-14T21:16:13.3217838-04:00"
+  },
+  {
+    "Id": 16,
+    "Tipo": "Transferencia",
+    "FromAccountId": 1,
+    "ToAccountId": 9,
+    "Monto": 100,
+    "Fecha": "2025-04-18T19:03:50.6353504-04:00"
+  },
+  {
+    "Id": 17,
+    "Tipo": "Dep\u00F3sito",
+    "FromAccountId": null,
+    "ToAccountId": 9,
+    "Monto": 500,
+    "Fecha": "2025-04-18T19:05:31.9208321-04:00"
   }
 ]

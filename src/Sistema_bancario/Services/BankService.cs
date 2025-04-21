@@ -45,5 +45,16 @@ namespace BankSim.Services
         {
             return _accounts.TryRemove(id, out _);
         }
+
+        public decimal GetBalance(int accountId)
+        {
+            if (_accounts.TryGetValue(accountId, out var account))
+            {
+                return account.Balance;
+            }
+            throw new ArgumentException($"La cuenta con ID {accountId} no existe.");
+        }
     }
+
+
 }

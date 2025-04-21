@@ -56,6 +56,7 @@ public static class JsonStorage
 
         Console.WriteLine("Resumen de transacciones guardado en metrics/resumen-transacciones.json");
     }
+
 }
 
 
