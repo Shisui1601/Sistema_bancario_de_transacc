@@ -14,7 +14,7 @@ public class TransactionSummary
 public class SimulacionMetricas
 {
     public int Procesadores { get; set; }
-    public long TiempoDuracionMs { get; set; }
+    public double TiempoDuracionMs { get; set; }
     public double Speedup { get; set; }
     public double Eficiencia { get; set; }
 }
