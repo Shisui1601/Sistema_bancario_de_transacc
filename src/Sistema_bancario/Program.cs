@@ -283,11 +283,10 @@ void SubmenuCuentas(BankService banco)
                 int nuevoId;
                 while (true)
                 {
-                    Console.Write("ID de cuenta (dejar vacío para generar automaticamente): ");
+                    Console.Write("ID de cuenta (dejar vacío para generar automáticamente): ");
                     string inputId = Console.ReadLine()!;
                     if (string.IsNullOrWhiteSpace(inputId))
                     {
-
                         var cuentasExistentes = banco.GetAllAccounts().ToList();
                         nuevoId = cuentasExistentes.Any() ? cuentasExistentes.Max(c => c.Id) + 1 : 1;
                         break;
@@ -311,10 +310,35 @@ void SubmenuCuentas(BankService banco)
                     }
                 }
 
-                Console.Write("Nombre del dueño: ");
-                string owner = Console.ReadLine()!;
-                Console.Write("Saldo inicial: ");
-                decimal saldo = decimal.Parse(Console.ReadLine()!);
+                string owner;
+                while (true)
+                {
+                    Console.Write("Nombre del dueño: ");
+                    owner = Console.ReadLine()!;
+                    if (!string.IsNullOrWhiteSpace(owner) && owner.All(char.IsLetter))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("El nombre del dueño solo debe contener letras.");
+                    }
+                }
+
+                decimal saldo;
+                while (true)
+                {
+                    Console.Write("Saldo inicial: ");
+                    string inputSaldo = Console.ReadLine()!;
+                    if (decimal.TryParse(inputSaldo, out saldo) && saldo >= 0)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Saldo inválido. Debe ser un número positivo.");
+                    }
+                }
 
                 banco.AddAccount(new Account(nuevoId, owner, saldo));
                 JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de agregar una nueva
@@ -322,7 +346,6 @@ void SubmenuCuentas(BankService banco)
                 JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de agregar una nueva cuenta
                 var nuevaCuenta = new Account(nuevoId, owner, saldo);
                 var nuevasCuentas = new List<Account>();
-                // Verificar si la cuenta ya existe en la lista
                 nuevasCuentas.Add(nuevaCuenta);
 
                 Console.WriteLine($"Cuenta registrada con ID: {nuevoId}");
@@ -395,12 +418,38 @@ void SubmenuOperaciones(BankService banco)
         switch (opcion)
         {
             case "1":
-                Console.Write("Cuenta origen: ");
-                int from = int.Parse(Console.ReadLine()!);
-                Console.Write("Cuenta destino: ");
-                int to = int.Parse(Console.ReadLine()!);
-                Console.Write("Monto: ");
-                decimal monto = decimal.Parse(Console.ReadLine()!);
+                int from, to;
+                decimal monto;
+
+                while (true)
+                {
+                    Console.Write("Cuenta origen: ");
+                    string inputFrom = Console.ReadLine()!;
+                    if (int.TryParse(inputFrom, out from))
+                        break;
+                    else
+                        Console.WriteLine("ID inválido. Debe ser un número entero.");
+                }
+
+                while (true)
+                {
+                    Console.Write("Cuenta destino: ");
+                    string inputTo = Console.ReadLine()!;
+                    if (int.TryParse(inputTo, out to))
+                        break;
+                    else
+                        Console.WriteLine("ID inválido. Debe ser un número entero.");
+                }
+
+                while (true)
+                {
+                    Console.Write("Monto: ");
+                    string inputMonto = Console.ReadLine()!;
+                    if (decimal.TryParse(inputMonto, out monto) && monto > 0)
+                        break;
+                    else
+                        Console.WriteLine("Monto inválido. Debe ser un número positivo.");
+                }
 
                 if (banco.Transfer(from, to, monto))
                 {
@@ -413,14 +462,13 @@ void SubmenuOperaciones(BankService banco)
                         Monto = monto
                     });
 
-                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después de la transferencia
-                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts()); // Guardar cuentas simuladas después de la transferencia
-                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después de la transferencia
-                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts());
+                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
+                    JsonStorage.SaveTransactions(transacciones);
+                    JsonStorage.SaveTransactionSummary(transacciones);
 
                     Console.WriteLine($"Transferencia de {monto:C} de la cuenta {from} a la cuenta {to}.");
                     Console.WriteLine("Transferencia realizada.");
-
                 }
                 else
                 {
@@ -428,11 +476,29 @@ void SubmenuOperaciones(BankService banco)
                 }
                 break;
 
-            case "2":
-                Console.Write("Cuenta a depositar: ");
-                int cuentaId = int.Parse(Console.ReadLine()!);
-                Console.Write("Monto a depositar: ");
-                decimal deposito = decimal.Parse(Console.ReadLine()!);
+            case "2": 
+                int cuentaId;
+                decimal deposito;
+
+                while (true)
+                {
+                    Console.Write("Cuenta a depositar: ");
+                    string inputCuentaId = Console.ReadLine()!;
+                    if (int.TryParse(inputCuentaId, out cuentaId))
+                        break;
+                    else
+                        Console.WriteLine("ID inválido. Debe ser un número entero.");
+                }
+
+                while (true)
+                {
+                    Console.Write("Monto a depositar: ");
+                    string inputDeposito = Console.ReadLine()!;
+                    if (decimal.TryParse(inputDeposito, out deposito) && deposito > 0)
+                        break;
+                    else
+                        Console.WriteLine("Monto inválido. Debe ser un número positivo.");
+                }
 
                 var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == cuentaId);
                 if (cuenta != null)
@@ -447,10 +513,10 @@ void SubmenuOperaciones(BankService banco)
                         Monto = deposito
                     });
 
-                    JsonStorage.SaveAccounts(banco.GetAllAccounts()); // Guardar cuentas después del depósito
-                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts()); // Guardar cuentas simuladas después del depósito
-                    JsonStorage.SaveTransactions(transacciones); // Guardar transacciones después del depósito
-                    JsonStorage.SaveTransactionSummary(transacciones); // Guardar resumen de transacciones
+                    JsonStorage.SaveAccounts(banco.GetAllAccounts());
+                    FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
+                    JsonStorage.SaveTransactions(transacciones);
+                    JsonStorage.SaveTransactionSummary(transacciones);
 
                     Console.WriteLine($"Depósito de {deposito:C} realizado en la cuenta {cuentaId}.");
                     Console.WriteLine("Depósito realizado.");
@@ -461,7 +527,7 @@ void SubmenuOperaciones(BankService banco)
                 }
                 break;
 
-            case "3":
+            case "3": 
                 if (transacciones.Count == 0)
                 {
                     Console.WriteLine("No hay transacciones registradas.");
@@ -473,7 +539,7 @@ void SubmenuOperaciones(BankService banco)
                 }
                 break;
 
-            case "4":
+            case "4": 
                 Console.Write("ID de transacción: ");
                 int tId = int.Parse(Console.ReadLine()!);
                 var trans = transacciones.FirstOrDefault(t => t.Id == tId);
@@ -483,7 +549,7 @@ void SubmenuOperaciones(BankService banco)
                     Console.WriteLine("Transacción no encontrada.");
                 break;
 
-            case "5":
+            case "5": 
                 return;
 
             default:
