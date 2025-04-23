@@ -222,23 +222,64 @@ while (true)
 
         case "4":
             Console.Write("Número de transacciones: ");
-            int n1 = int.Parse(Console.ReadLine()!);
+            int n1;
+
+            while (true)
+            {
+                string input = Console.ReadLine()!;
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Console.WriteLine("El número de transacciones no puede estar vacío. Intenta nuevamente.");
+                    continue;
+                }
+
+                if (!int.TryParse(input, out n1) || n1 <= 0)
+                {
+                    Console.WriteLine("El número de transacciones debe ser un número entero positivo. Intenta nuevamente.");
+                    continue;
+                }
+
+                break;
+            }
+
             var procesadores1 = new[] { 1, 2, 4, 6, 8, 10 };
             var resumen = new TransactionSummary();
             await EjecutarConParallel(bankSimulacion, n1, procesadores1, resumen);
-            // JsonStorage.SaveTransactionSummary(resumen);
             Console.WriteLine("Resumen guardado.");
             break;
 
+
         case "5":
             Console.Write("Número de transacciones: ");
-            int n2 = int.Parse(Console.ReadLine()!);
+            int n2;
+
+            while (true)
+            {
+                string input = Console.ReadLine()!;
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Console.WriteLine("El número de transacciones no puede estar vacío. Intenta nuevamente.");
+                    continue;
+                }
+
+                if (!int.TryParse(input, out n2) || n2 <= 0)
+                {
+                    Console.WriteLine("El número de transacciones debe ser un número entero positivo. Intenta nuevamente.");
+                    continue;
+                }
+
+                break;
+            }
+
             var procesadores2 = new[] { 1, 2, 4, 6, 8, 10 };
             var resu = new TransactionSummary();
             await EjecutarConTasks(bankSimulacion, n2, procesadores2, resu);
             //JsonStorage.SaveTransactionSummary(resu);
             Console.WriteLine("Resumen guardado.");
             break;
+
 
         case "6":
             Console.WriteLine("Saliendo...");
@@ -275,8 +316,16 @@ void SubmenuCuentas(BankService banco)
         switch (opcion)
         {
             case "1":
-                foreach (var acc in banco.GetAllAccounts())
-                    Console.WriteLine($"[{acc.Id}] {acc.Owner} - ${acc.Balance}");
+                var Existentes = banco.GetAllAccounts();
+                if (Existentes.Any())
+                {
+                    foreach (var acc in banco.GetAllAccounts())
+                        Console.WriteLine($"[{acc.Id}] {acc.Owner} - ${acc.Balance}");
+                }
+                else
+                {
+                    Console.WriteLine("Actualmente no hay cuentas creadas");
+                }
                 break;
 
             case "2":
@@ -357,37 +406,86 @@ void SubmenuCuentas(BankService banco)
 
 
             case "3":
-                Console.Write("Ingresa el ID de la cuenta: ");
-                int buscarId = int.Parse(Console.ReadLine()!);
-                var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == buscarId);
-                if (cuenta != null)
-                    Console.WriteLine($"[{cuenta.Id}] {cuenta.Owner} - ${cuenta.Balance}");
-                else
-                    Console.WriteLine("Cuenta no encontrada.");
-                break;
+                int buscarId;
 
-            case "4":
-                Console.Write("Ingresa el ID de la cuenta a eliminar: ");
-                int eliminarId = int.Parse(Console.ReadLine()!);
-                var cuentaEliminar = banco.GetAllAccounts().FirstOrDefault(c => c.Id == eliminarId);
-                if (cuentaEliminar != null)
+                while (true)
                 {
-                    if (banco.RemoveAccount(eliminarId))
+                    Console.Write("Ingresa el ID de la cuenta: ");
+                    string input = Console.ReadLine()!;
+
+                    if (string.IsNullOrWhiteSpace(input))
                     {
-                        JsonStorage.SaveAccounts(banco.GetAllAccounts());
-                        FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
-                        Console.WriteLine($"Cuenta con ID {eliminarId} eliminada.");
+                        Console.WriteLine("El ID no puede estar vacío. Intenta nuevamente.");
+                        continue;
+                    }
+
+                    if (!int.TryParse(input, out buscarId) || buscarId <= 0)
+                    {
+                        Console.WriteLine("El ID debe ser un número entero positivo. Intenta nuevamente.");
+                        continue;
+                    }
+
+                    // Buscar la cuenta con el ID
+                    var cuenta = banco.GetAllAccounts().FirstOrDefault(c => c.Id == buscarId);
+
+                    if (cuenta != null)
+                    {
+                        Console.WriteLine($"[{cuenta.Id}] {cuenta.Owner} - ${cuenta.Balance}");
                     }
                     else
                     {
-                        Console.WriteLine("No se pudo eliminar la cuenta.");
+                        Console.WriteLine("Cuenta no encontrada.");
                     }
-                }
-                else
-                {
-                    Console.WriteLine("Cuenta no encontrada.");
+
+                    break;
                 }
                 break;
+
+
+            case "4":
+                int eliminarId;
+
+                while (true)
+                {
+                    Console.Write("Ingresa el ID de la cuenta a eliminar: ");
+                    string input = Console.ReadLine()!;
+
+                    if (string.IsNullOrWhiteSpace(input))
+                    {
+                        Console.WriteLine("El ID no puede estar vacío. Intenta nuevamente.");
+                        continue;
+                    }
+
+                    if (!int.TryParse(input, out eliminarId) || eliminarId <= 0)
+                    {
+                        Console.WriteLine("El ID debe ser un número entero positivo. Intenta nuevamente.");
+                        continue;
+                    }
+
+                    var cuentaEliminar = banco.GetAllAccounts().FirstOrDefault(c => c.Id == eliminarId);
+
+                    if (cuentaEliminar != null)
+                    {
+                        if (banco.RemoveAccount(eliminarId))
+                        {
+                            JsonStorage.SaveAccounts(banco.GetAllAccounts());
+                            FileManager.SaveAccountsSimulacion(banco.GetAllAccounts());
+                            Console.WriteLine($"Cuenta con ID {eliminarId} eliminada.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("No se pudo eliminar la cuenta.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Cuenta no encontrada.");
+                    }
+
+                    break;
+                }
+                break;
+
 
             case "5":
                 return;
@@ -543,6 +641,7 @@ void SubmenuOperaciones(BankService banco)
                 Console.Write("ID de transacción: ");
                 int tId = int.Parse(Console.ReadLine()!);
                 var trans = transacciones.FirstOrDefault(t => t.Id == tId);
+
                 if (trans != null)
                     Console.WriteLine(trans);
                 else
